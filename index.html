@@ -25,7 +25,7 @@
             margin-top: 50px;
         }
         textarea {
-            width: 98%;
+            width: 100%;
             height: 200px;
             margin-bottom: 15px;
             padding: 10px;
@@ -112,78 +112,103 @@
   let chamados6000 = [];
 
   function gerarLinks() {
-  const input = document.getElementById("ordensInput").value.trim();
-  if (!input) {
-    alert("Insira os chamados.");
-    return;
-  }
-
-  ordensList = input.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
-  const container = document.getElementById("buttonsContainer");
-  container.innerHTML = "";
-
-  chamados50013 = [];
-  chamados6000 = [];
-
-  ordensList.forEach(os => {
-    if (os.startsWith("50013")) {
-      chamados50013.push(os);
-    } else if (os.startsWith("6000")) {
-      chamados6000.push(os);
+    const input = document.getElementById("ordensInput").value.trim();
+    if (!input) {
+        alert("Insira os chamados.");
+        return;
     }
-  });
 
-  chamados50013.forEach(os => {
-    const button = document.createElement("button");
-    const osId = os.substring(3);
-    button.className = "btn-50013";
-    button.textContent = `PDF ${os}`;
-    button.onclick = () => {
-      const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
-      window.open(url, "_blank");
-    };
-    container.appendChild(button);
-  });
+    // Processa a entrada e limpa os números
+    ordensList = input.split(/[\s,]+/)
+                     .map(s => s.trim().replace(/\D/g, ''))
+                     .filter(Boolean);
 
-  chamados6000.forEach(os => {
-    const button = document.createElement("button");
-    button.className = "btn-6000";
-    button.textContent = `Assist ${os}`;
-    button.onclick = () => {
-      const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
-      window.open(url, "_blank");
-    };
-    container.appendChild(button);
-  });
+    const container = document.getElementById("buttonsContainer");
+    container.innerHTML = "";
 
-  document.getElementById("status").textContent =
-    `${chamados50013.length} PDFs e ${chamados6000.length} links Assist gerados.`;
+    chamados50013 = [];
+    chamados6000 = [];
+    const chamadosInvalidos = [];
+
+    ordensList.forEach(os => {
+        // Validação do comprimento
+        if (os.length !== 11) {
+            chamadosInvalidos.push(os);
+            console.log(`Chamado ${os} ignorado - tamanho inválido (deve ter 11 dígitos)`);
+            return;
+        }
+
+        // Validação do prefixo
+        if (os.startsWith("50013")) {
+            chamados50013.push(os);
+        } else if (os.startsWith("6000")) {
+            chamados6000.push(os);
+        } else {
+            chamadosInvalidos.push(os);
+            console.log(`Chamado ${os} ignorado - formato não reconhecido`);
+        }
+    });
+
+    // Cria os botões para chamados válidos
+    chamados50013.forEach(os => {
+        const button = document.createElement("button");
+        const osId = os.substring(3); // Remove os 3 primeiros dígitos (500)
+        button.className = "btn-50013";
+        button.textContent = `PDF ${os}`;
+        button.onclick = () => {
+            const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
+            window.open(url, "_blank");
+        };
+        container.appendChild(button);
+    });
+
+    chamados6000.forEach(os => {
+        const button = document.createElement("button");
+        button.className = "btn-6000";
+        button.textContent = `Assist ${os}`;
+        button.onclick = () => {
+            const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
+            window.open(url, "_blank");
+        };
+        container.appendChild(button);
+    });
+
+    // Exibe estatísticas
+    let statusMessage = `${chamados50013.length} PDFs e ${chamados6000.length} link(s) Assist gerado(s).`;
+    if (chamadosInvalidos.length > 0) {
+        statusMessage += ` ${chamadosInvalidos.length} chamados(s) inválido(s).`;
+        // Opcional: mostrar os inválidos em uma lista
+        const invalidosDiv = document.createElement("div");
+        invalidosDiv.style.marginTop = "10px";
+        invalidosDiv.style.color = "#ff5722";
+        invalidosDiv.textContent = `Inválidos: ${chamadosInvalidos.join(", ")}`;
+        container.appendChild(invalidosDiv);
+    }
+    document.getElementById("status").textContent = statusMessage;
 }
 
-  function baixarTodos() {
-  const total = chamados50013.length + chamados6000.length;
+function baixarTodos() {
+    const total = chamados50013.length + chamados6000.length;
+    if (total === 0) {
+        alert("Nenhum chamado válido para processar. Verifique os números inseridos.");
+        return;
+    }
 
-  if (total === 0) {
-    alert("Gere os links primeiro.");
-    return;
-  }
+    if (!confirm(`Abrir ${total} abas para chamados válidos?`)) return;
 
-  if (!confirm(`Abrir ${total} abas?`)) return;
-
-  const todosEmOrdem = chamados50013.concat(chamados6000);
-
-  todosEmOrdem.forEach((os, index) => {
-    setTimeout(() => {
-      if (os.startsWith("50013")) {
-        const osId = os.substring(3);
-        const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
-        window.open(url, "_blank");
-      } else if (os.startsWith("6000")) {
-        const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
-        window.open(url, "_blank");
-      }
+    const todosEmOrdem = chamados50013.concat(chamados6000);
+    todosEmOrdem.forEach((os, index) => {
+        setTimeout(() => {
+            if (os.startsWith("50013")) {
+                const osId = os.substring(3);
+                const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
+                window.open(url, "_blank");
+            } else if (os.startsWith("6000")) {
+                const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
+                window.open(url, "_blank");
+            }
+        });
     });
-  });
 }
 
 
