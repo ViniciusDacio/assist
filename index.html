@@ -77,6 +77,11 @@
             margin-top: 15px;
             font-weight: bold;
         }
+        button:disabled {
+            background-color: #ccc !important;
+            color: #666 !important;
+            cursor: not-allowed !important;
+        }
     </style>
 </head>
 <body>
@@ -100,8 +105,8 @@
 50013219147"></textarea>
 
     <button onclick="gerarLinks()">Gerar Links</button>
-    <button id="baixarTodos" onclick="baixarTodos()">Abrir Todos</button>
-    <button class="limpar" onclick="limparTudo()">Limpar Tudo</button>
+    <button id="baixarTodos" onclick="baixarTodos()" disabled>Abrir Todos</button>
+    <button class="limpar" onclick="limparTudo()" disabled>Limpar Tudo</button>
 
     <div id="buttonsContainer" class="buttons-container"></div>
     <div id="status"></div>
@@ -185,6 +190,8 @@
         container.appendChild(invalidosDiv);
     }
     document.getElementById("status").textContent = statusMessage;
+    btnBaixarTodos.disabled = false;
+
 }
 
 function baixarTodos() {
@@ -217,7 +224,17 @@ function baixarTodos() {
     document.getElementById("buttonsContainer").innerHTML = "";
     document.getElementById("status").textContent = "";
     ordensList = [];
+    btnBaixarTodos.disabled = true;
+    btnLimpar.disabled = true;
   }
+    const input = document.getElementById("ordensInput");
+    const btnBaixarTodos = document.getElementById("baixarTodos");
+    const btnLimpar = document.querySelector(".limpar");
+    
+    input.addEventListener("input", () => {
+      const temTexto = input.value.trim().length > 0;
+      btnLimpar.disabled = !temTexto;
+    });
 </script>
 
 </body>
