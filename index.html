@@ -41,7 +41,7 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .limpar{
+        .limpar {
             background-color: rgba(255, 0, 0, 0.788);
         }
         button:hover {
@@ -67,7 +67,7 @@
             background-color: #007BFF;
             color: white;
         }
-        .limpar:hover{
+        .limpar:hover {
             background-color: #666;
         }
         .info {
@@ -99,13 +99,14 @@
             <li>Use <strong>"Baixar Todos"</strong> para abrir os PDFs em sequência (salve manualmente em cada aba).</li>
         </ol>
         <p><strong>Nota:</strong> O Navegador pode bloquear a abertura de pop-ups. Verique e permita caso não abra todas as guias.</p>
-        <p><strong>Nota²:</strong> O sistema não gera PDFs de chamados iniciados em 6000, apenas direciona para a aba de pesquisa do ASSIST.</p>
+        <p><strong>Nota²:</strong> O sistema não gera PDFs de chamados iniciados em 6000 ou 20001, apenas direciona para a aba de pesquisa do ASSIST.</p>
     </div>
 
     <textarea id="ordensInput" placeholder="Cole as ordens aqui, separadas por vírgula ou linha. Exemplo:
 50013214520
-50013214655
-50013219147"></textarea>
+60006022631
+20001234567
+80013214520"></textarea>
 
     <button onclick="gerarLinks()">Gerar Links</button>
     <button id="baixarTodos" onclick="baixarTodos()" disabled>Abrir Todos</button>
@@ -115,129 +116,149 @@
     <div id="status"></div>
 
 <script>
+  const inputArea = document.getElementById("ordensInput");
+  const btnBaixarTodos = document.getElementById("baixarTodos");
+  const btnLimpar = document.querySelector(".limpar");
+  const container = document.getElementById("buttonsContainer");
+  const statusEl = document.getElementById("status");
+
   let ordensList = [];
-  let chamados50013 = [];
-  let chamados6000 = [];
+  let chamadosPDF = [];     // 50013 e 80013
+  let chamadosAssist = [];  // 6000 e 20001
+
+  function abrirAssistAutomaticamente(callback) {
+    const assistUrl = "https://assist.positivotecnologia.com.br/bin/login_destino.php";
+    const win = window.open(
+      assistUrl,
+      "assistAuto",
+      "width=200,height=120,left=-10000,top=-10000"
+    );
+
+    if (!win || win.closed) {
+      callback();
+      return;
+    }
+
+    setTimeout(() => {
+      try { win.close(); } catch (e) {}
+      callback();
+    }, 100);
+  }
 
   function gerarLinks() {
-    const input = document.getElementById("ordensInput").value.trim();
-    if (!input) {
-        alert("Insira os chamados.");
-        return;
-    }
+    abrirAssistAutomaticamente(() => {
+      const input = inputArea.value.trim();
+      if (!input) {
+          alert("Insira os chamados.");
+          return;
+      }
 
-    // Processa a entrada e limpa os números
-    ordensList = input.split(/[\s,]+/)
-                     .map(s => s.trim().replace(/\D/g, ''))
-                     .filter(Boolean);
+      ordensList = input.split(/[\s,]+/)
+                       .map(s => s.trim().replace(/\D/g, ''))
+                       .filter(Boolean);
 
-    const container = document.getElementById("buttonsContainer");
-    container.innerHTML = "";
+      container.innerHTML = "";
+      chamadosPDF = [];
+      chamadosAssist = [];
+      const chamadosInvalidos = [];
 
-    chamados50013 = [];
-    chamados6000 = [];
-    const chamadosInvalidos = [];
+      ordensList.forEach(os => {
+          if (os.length !== 11) {
+              chamadosInvalidos.push(os);
+              return;
+          }
 
-    ordensList.forEach(os => {
-        // Validação do comprimento
-        if (os.length !== 11) {
-            chamadosInvalidos.push(os);
-            console.log(`Chamado ${os} ignorado - tamanho inválido (deve ter 11 dígitos)`);
-            return;
-        }
+          // Identifica padrão
+          if (os.startsWith("50013") || os.startsWith("80013")) {
+              chamadosPDF.push(os);
+          } else if (os.startsWith("6000") || os.startsWith("20001")) {
+              chamadosAssist.push(os);
+          } else {
+              chamadosInvalidos.push(os);
+          }
+      });
 
-        // Validação do prefixo
-        if (os.startsWith("50013")) {
-            chamados50013.push(os);
-        } else if (os.startsWith("6000")) {
-            chamados6000.push(os);
-        } else {
-            chamadosInvalidos.push(os);
-            console.log(`Chamado ${os} ignorado - formato não reconhecido`);
-        }
+      // Cria botões PDF (links diretos)
+      chamadosPDF.forEach(os => {
+          const button = document.createElement("button");
+          const osId = os.substring(3);
+          button.className = "btn-50013";
+          button.textContent = `PDF ${os}`;
+          button.onclick = () => {
+              const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
+              window.open(url, "_blank");
+          };
+          container.appendChild(button);
+      });
+
+      // Cria botões Assist (pesquisa)
+      chamadosAssist.forEach(os => {
+          const button = document.createElement("button");
+          button.className = "btn-6000";
+          button.textContent = `Assist ${os}`;
+          button.onclick = () => {
+              const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
+              window.open(url, "_blank");
+          };
+          container.appendChild(button);
+      });
+
+      // Exibe estatísticas
+      let statusMessage = `${chamadosPDF.length} PDFs e ${chamadosAssist.length} link(s) Assist gerado(s).`;
+      if (chamadosInvalidos.length > 0) {
+          statusMessage += ` ${chamadosInvalidos.length} chamado(s) inválido(s).`;
+          const invalidosDiv = document.createElement("div");
+          invalidosDiv.style.marginTop = "10px";
+          invalidosDiv.style.color = "#ff5722";
+          invalidosDiv.textContent = `Inválidos: ${chamadosInvalidos.join(", ")}`;
+          container.appendChild(invalidosDiv);
+      }
+
+      statusEl.textContent = statusMessage;
+      btnBaixarTodos.disabled = false;
+      btnLimpar.disabled = false;
     });
+  }
 
-    // Cria os botões para chamados válidos
-    chamados50013.forEach(os => {
-        const button = document.createElement("button");
-        const osId = os.substring(3); // Remove os 3 primeiros dígitos (500)
-        button.className = "btn-50013";
-        button.textContent = `PDF ${os}`;
-        button.onclick = () => {
-            const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
-            window.open(url, "_blank");
-        };
-        container.appendChild(button);
-    });
+  function baixarTodos() {
+      const total = chamadosPDF.length + chamadosAssist.length;
+      if (total === 0) {
+          alert("Nenhum chamado válido para processar. Verifique os números inseridos.");
+          return;
+      }
 
-    chamados6000.forEach(os => {
-        const button = document.createElement("button");
-        button.className = "btn-6000";
-        button.textContent = `Assist ${os}`;
-        button.onclick = () => {
-            const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
-            window.open(url, "_blank");
-        };
-        container.appendChild(button);
-    });
+      if (!confirm(`Abrir ${total} abas para chamados válidos?`)) return;
 
-    // Exibe estatísticas
-    let statusMessage = `${chamados50013.length} PDFs e ${chamados6000.length} link(s) Assist gerado(s).`;
-    if (chamadosInvalidos.length > 0) {
-        statusMessage += ` ${chamadosInvalidos.length} chamados(s) inválido(s).`;
-        // Opcional: mostrar os inválidos em uma lista
-        const invalidosDiv = document.createElement("div");
-        invalidosDiv.style.marginTop = "10px";
-        invalidosDiv.style.color = "#ff5722";
-        invalidosDiv.textContent = `Inválidos: ${chamadosInvalidos.join(", ")}`;
-        container.appendChild(invalidosDiv);
-    }
-    document.getElementById("status").textContent = statusMessage;
-    btnBaixarTodos.disabled = false;
-
-}
-
-function baixarTodos() {
-    const total = chamados50013.length + chamados6000.length;
-    if (total === 0) {
-        alert("Nenhum chamado válido para processar. Verifique os números inseridos.");
-        return;
-    }
-
-    if (!confirm(`Abrir ${total} abas para chamados válidos?`)) return;
-
-    const todosEmOrdem = chamados50013.concat(chamados6000);
-    todosEmOrdem.forEach((os, index) => {
-        setTimeout(() => {
-            if (os.startsWith("50013")) {
-                const osId = os.substring(3);
-                const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
-                window.open(url, "_blank");
-            } else if (os.startsWith("6000")) {
-                const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
-                window.open(url, "_blank");
-            }
-        });
-    });
-}
-
+      const todosEmOrdem = chamadosPDF.concat(chamadosAssist);
+      todosEmOrdem.forEach((os) => {
+          setTimeout(() => {
+              if (os.startsWith("50013") || os.startsWith("80013")) {
+                  const osId = os.substring(3);
+                  const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
+                  window.open(url, "_blank");
+              } else if (os.startsWith("6000") || os.startsWith("20001")) {
+                  const url = `https://assist.positivotecnologia.com.br/bin/at/pesq_os.php?CHAMADO_NUMERO=${os}`;
+                  window.open(url, "_blank");
+              }
+          });
+      });
+  }
 
   function limparTudo() {
-    document.getElementById("ordensInput").value = "";
-    document.getElementById("buttonsContainer").innerHTML = "";
-    document.getElementById("status").textContent = "";
-    ordensList = [];
-    btnBaixarTodos.disabled = true;
-    btnLimpar.disabled = true;
+      inputArea.value = "";
+      container.innerHTML = "";
+      statusEl.textContent = "";
+      ordensList = [];
+      chamadosPDF = [];
+      chamadosAssist = [];
+      btnBaixarTodos.disabled = true;
+      btnLimpar.disabled = true;
   }
-    const input = document.getElementById("ordensInput");
-    const btnBaixarTodos = document.getElementById("baixarTodos");
-    const btnLimpar = document.querySelector(".limpar");
-    
-    input.addEventListener("input", () => {
-      const temTexto = input.value.trim().length > 0;
-      btnLimpar.disabled = !temTexto;
-    });
+
+  inputArea.addEventListener("input", () => {
+    const temTexto = inputArea.value.trim().length > 0;
+    btnLimpar.disabled = !temTexto;
+  });
 </script>
 
 </body>
