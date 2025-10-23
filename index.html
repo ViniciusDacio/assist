@@ -85,10 +85,46 @@
             color: #666 !important;
             cursor: not-allowed !important;
         }
+        .bm {
+            background-color: #f1efef;
+            display:inline-block; 
+            padding:10px 14px; 
+            border-radius:10px; 
+            text-decoration:none; 
+            border:1px solid #ddd;
+        }
+        .bm:hover{
+            background:#f7f7f7
+        }
+        .bm-note{
+            font-size:13px;
+        }
+        details {
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        details summary {
+        background-color: #ccc;
+        color: black;
+        padding: 10px 14px;
+        cursor: pointer;
+        
+        }
+        details summary:hover {
+        background-color: #ffffff;
+        }
     </style>
 </head>
 <body>
     <h1>Download de PDFs - Assist</h1>
+    
+    <details>
+        <summary>Instruções</summary>
     
     <div class="info">
         <p><strong>Instruções:</strong></p>
@@ -101,6 +137,32 @@
         <p><strong>Nota:</strong> O Navegador pode bloquear a abertura de pop-ups. Verique e permita caso não abra todas as guias.</p>
         <p><strong>Nota²:</strong> O sistema não gera PDFs de chamados iniciados em 6000 ou 20001, apenas direciona para a aba de pesquisa do ASSIST.</p>
     </div>
+    </details>
+
+    <details>
+    <summary>Atalhos para fazer laudo</summary>
+<div class="info">
+
+  <div>
+    <a class="bm" title="Arraste para os favoritos"
+href="javascript:(async function(){ function getTextFromRow(label){     var row = Array.from(document.querySelectorAll('tr.link1')).find(tr=>{         return (tr.innerText||'').toLowerCase().includes(label.toLowerCase());     });     if(!row) return '';     var tds = row.querySelectorAll('td');     if(tds.length < 2) return tds[0]?.innerText.trim()%20||%20%27%27;%20%20%20%20%20return%20tds[1].innerText.trim();%20}%20%20%20%20var%20data%20=%20{%20%20%20%20%20ordemServico:%20getTextFromRow(%27Ordem%20de%20Servi%C3%A7o%27).replace(/\D/g,%27%27),%20%20%20%20%20osCliente:%20%270%27,%20%20%20%20%20agencia:%20%270%27,%20%20%20%20%20segmento:%20%27Governo%27,%20%20%20%20%20projeto:%20getTextFromRow(%27PEP%27),%20%20%20%20%20nomeCliente:%20getTextFromRow(%27Nome%20do%20Consumidor%27).replace(/\(Ver.*\)/,%27%27).trim(),%20%20%20%20%20responsavel:%20getTextFromRow(%27Nome%20do%20Consumidor%27).replace(/\(Ver.*\)/,%27%27).trim(),%20%20%20%20%20cnpj:%20getTextFromRow(%27CPF/CNPJ%27),%20%20%20%20%20uf:%20%27SP%27,%20%20%20%20%20serial:%20getTextFromRow(%27Serial%27),%20%20%20%20%20sku:%20getTextFromRow(%27SKU%27),%20%20%20%20%20email:%20getTextFromRow(%27E-mail%27)%20%20%20};%20%20%20%20try{%20%20%20%20%20await%20navigator.clipboard.writeText(JSON.stringify(data));%20%20%20%20%20alert(%27%E2%9C%85%20Dados%20copiados%20para%20a%20%C3%A1rea%20de%20transfer%C3%AAncia:\n\n%27%20+%20JSON.stringify(data,null,2));%20%20%20}catch(e){%20%20%20%20%20alert(%27%E2%9A%A0%EF%B8%8F%20N%C3%A3o%20consegui%20acessar%20o%20clipboard.\nCopie%20manualmente%20este%20texto:\n\n%27%20+%20JSON.stringify(data,null,2));%20%20%20}%20})();">
+      📋 Copiar Assist
+    </a>
+
+    <a class="bm" title="Arraste para os favoritos"
+href="javascript:(async function(){   function setIfExists(sel,val){     var el=document.querySelector(sel);     if(!el) return;     el.value=val;     el.dispatchEvent(new Event('change',{bubbles:true}));     el.dispatchEvent(new Event('input',{bubbles:true}));   }    let text = '';   try{     text = await navigator.clipboard.readText();   }catch(e){     alert('%E2%9A%A0%EF%B8%8F N%C3%A3o consegui ler do clipboard. Tente colar manualmente.');     return;   }    let data = {};   try{     data = JSON.parse(text);   }catch(e){     alert('%E2%9A%A0%EF%B8%8F O que est%C3%A1 no clipboard n%C3%A3o %C3%A9 v%C3%A1lido.\nConte%C3%BAdo:\n' + text);     return;   }    setIfExists('#numberOs',%20data.ordemServico);%20%20%20setIfExists('#osCliente',%20data.osCliente);%20%20%20setIfExists('#cgcAgencia',%20data.agencia);%20%20%20setIfExists('#segmento',%20data.segmento);%20%20%20setIfExists('#pep',%20data.projeto);%20%20%20setIfExists('#clientDetent',%20data.nomeCliente);%20%20%20setIfExists('#respTec',%20data.responsavel);%20%20%20setIfExists('#respTecCpf',%20data.cnpj);%20%20%20setIfExists('#clientUf',%20data.uf);%20%20%20setIfExists('#serialNumber',%20data.serial);%20%20%20setIfExists('#sku',%20data.sku);%20%20%20setIfExists('#contactEmail',%20data.email);%20%20%20%20%20var%20falha=document.querySelector('#falhaDiagnostico');%20%20%20if(falha){%20%20%20%20%20Array.from(falha.options).forEach(function(o){%20%20%20%20%20%20%20if(o.text.toLowerCase().includes('uso%20inadequado'))%20o.selected=true;%20%20%20%20%20});%20%20%20}%20%20%20%20alert('%E2%9C%85%20Formul%C3%A1rio%20preenchido%20com%20os%20dados%20copiados!');%20})();">
+      📝 Colar ATP
+    </a>
+
+    <a class="bm" title="Arraste para os favoritos"
+href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value='L';var d=new Date();document.querySelector('input[name=&quot;dataInicio&quot;]').value=d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();document.querySelector('input[name=&quot;horaInicio&quot;]').value=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');document.querySelector('textarea[name=&quot;observacao&quot;]').value='Efetuado Laudo T%C3%A9cnico';void(0);">
+      🔧 Preencher conserto
+    </a>
+  </div>
+
+  <p class="bm-note">Como usar: ative a barra de favoritos (Ctrl+Shift+B), <b>arraste</b> os botões acima para a barra e clique neles nas páginas certas.</p>
+</div>
+</details>
 
     <textarea id="ordensInput" placeholder="Cole as ordens aqui, separadas por vírgula ou linha. Exemplo:
 50013214520
