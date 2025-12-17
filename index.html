@@ -299,7 +299,7 @@ href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value=
       const todosEmOrdem = chamadosPDF.concat(chamadosAssist);
       todosEmOrdem.forEach((os) => {
           setTimeout(() => {
-              if (os.startsWith("50013") || os.startsWith("80013")) || os.startsWith("70014") {
+              if (os.startsWith("50013") || os.startsWith("80013") || os.startsWith("70014")) {
                   const osId = os.substring(3);
                   const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
                   window.open(url, "_blank");
