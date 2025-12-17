@@ -231,13 +231,18 @@ href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value=
           }
 
           // Identifica padrão
-          if (os.startsWith("50013") || os.startsWith("80013")) {
-              chamadosPDF.push(os);
-          } else if (os.startsWith("6000") || os.startsWith("20001")) {
-              chamadosAssist.push(os);
-          } else {
-              chamadosInvalidos.push(os);
-          }
+          if (
+            os.startsWith("50013") ||
+            os.startsWith("80013") ||
+            os.startsWith("70014")
+        ) {
+            chamadosPDF.push(os);
+        } else if (os.startsWith("6000") || os.startsWith("20001")) {
+            chamadosAssist.push(os);
+        } else {
+            chamadosInvalidos.push(os);
+        }
+
       });
 
       // Cria botões PDF (links diretos)
@@ -294,7 +299,7 @@ href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value=
       const todosEmOrdem = chamadosPDF.concat(chamadosAssist);
       todosEmOrdem.forEach((os) => {
           setTimeout(() => {
-              if (os.startsWith("50013") || os.startsWith("80013")) {
+              if (os.startsWith("50013") || os.startsWith("80013")) || os.startsWith("70014") {
                   const osId = os.substring(3);
                   const url = `https://assist.positivotecnologia.com.br/bin/at/comprovantes/gerarRatPdf.php?os_id=${osId}&mostraStatus=1`;
                   window.open(url, "_blank");
