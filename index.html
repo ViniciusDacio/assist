@@ -118,6 +118,26 @@
         details summary:hover {
         background-color: #ffffff;
         }
+        .search-box { 
+            display: flex; 
+            gap: 10px; 
+            background: #fff; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        }
+        input { 
+            flex: 1; 
+            padding: 12px; 
+            border: 1px solid #ccd1d9; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            outline: none; 
+            transition: border 0.2s; 
+        }
+        input:focus { 
+            border-color: #2196F3; 
+        }
     </style>
 </head>
 <body>
@@ -162,6 +182,20 @@ href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value=
 
   <p class="bm-note">Como usar: ative a barra de favoritos (Ctrl+Shift+B), <b>arraste</b> os botões acima para a barra e clique neles nas páginas certas.</p>
 </div>
+</details>
+
+<details>
+    <summary>Atalho Painel SLA</summary>
+    <div class="info">
+
+    <div class="search-box">
+        <input type="text" id="chamadoInput" placeholder="Digite o chamado (ex: 70014834536)" autofocus>
+        <button onclick="abrirPainelSLA()">Abrir</button>
+    </div>
+
+    <p class="bm-note">Aceita apenas chamados iniciados em 700, 500 e 800.</p>
+    <p class="bm-note">Ou colocar o ID da URL dos demais chamados</p>
+    </div>
 </details>
 
     <textarea id="ordensInput" placeholder="Cole as ordens aqui, separadas por vírgula ou linha. Exemplo:
@@ -326,6 +360,46 @@ href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value=
     const temTexto = inputArea.value.trim().length > 0;
     btnLimpar.disabled = !temTexto;
   });
+
+// PAINEL SLA
+
+  // Dispara a função ao apertar a tecla "Enter" no teclado
+    document.getElementById("chamadoInput").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") abrirPainelSLA();
+    });
+
+    function abrirPainelSLA() {
+        const chamadoInput = document.getElementById("chamadoInput");
+        
+        // Remove qualquer caractere que não seja número e espaços extras
+        let chamadoRaw = chamadoInput.value.trim().replace(/\D/g, '');
+        
+        if (!chamadoRaw) {
+            alert("Por favor, digite o número do chamado.");
+            return;
+        }
+
+        let osId = "";
+        
+        // Separação baseada na regra do início "700"
+        if (chamadoRaw.startsWith("700") && chamadoRaw.length === 11) {
+            osId = chamadoRaw.substring(3); // Corta os 3 primeiros caracteres (700) e pega o restante
+        } else if (chamadoRaw.length === 8) {
+            osId = chamadoRaw; // Se digitado apenas os 8 números finais, usa direto
+        } else {
+            osId = chamadoRaw;
+        }
+
+        // Monta a URL exata do painel desejado
+        const url = `https://assist.positivotecnologia.com.br/bin/at/detalhes_painelSLA.php?os_id=${osId}&popup=1`;
+
+        // Abre em uma nova guia
+        window.open(url, '_blank');
+
+        // Limpa o campo de texto automaticamente e deixa pronto para a próxima consulta
+        chamadoInput.value = "";
+        chamadoInput.focus();
+    }
 </script>
 
 </body>
