@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processador de Saldo de Peças</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        @page {
+            size: A4;
+            margin: 15mm 15mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .top-nav {
+            margin-bottom: 20px;
+        }
+        .btn-voltar {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+        .btn-voltar:hover {
+            background-color: #5a6268;
+        }
+        h2 {
+            margin-top: 0;
+            color: #0F4C81;
+            font-size: 24px;
+            border-bottom: 2px solid #0F4C81;
+            padding-bottom: 10px;
+        }
+        .info-header {
+            background-color: #eef1f6;
+            padding: 15px;
+            border-left: 4px solid #0F4C81;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        ol {
+            margin: 5px 0 0 0;
+            padding-left: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #0F4C81;
+            box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.15);
+        }
+        .button-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background-color: #0F4C81;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #0b355c;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button.btn-secondary {
+            background-color: #6c757d;
+        }
+        button.btn-secondary:hover {
+            background-color: #dd1717;
+        }
+        button.btn-success {
+            background-color: #28a745;
+        }
+        button.btn-success:hover {
+            background-color: #218838;
+        }
+        .tecnico-titulo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #212529;
+            margin: 30px 0 15px 0;
+            background-color: #e9ecef;
+            padding: 12px 15px;
+            border-left: 5px solid #0F4C81;
+            border-radius: 0 4px 4px 0;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f3f5;
+            color: #495057;
+            font-weight: bold;
+        }
+        /* Estilo para colunas ordenáveis */
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        th.sortable:hover {
+            background-color: #e2e6ea;
+        }
+        th.sortable::after {
+            content: ' ⇅';
+            font-size: 12px;
+            color: #6c757d;
+        }
+        th.sortable.asc::after {
+            content: ' ↑';
+            color: #0F4C81;
+        }
+        th.sortable.desc::after {
+            content: ' ↓';
+            color: #0F4C81;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+            }
+            textarea, .info-header, .button-group, h2, .top-nav {
+                display: none !important;
+            }
+            .tecnico-titulo {
+                display: block;
+                background-color: transparent;
+                border-left: none;
+                padding: 0 0 10px 0;
+                margin-top: 0;
+                border-bottom: 1px solid #ccc;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            th {
+                background-color: #f1f3f5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            th.sortable::after {
+                content: ''; /* Remove setas na impressão */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav">
+        <a href="index.html" class="btn-voltar">← Voltar para Início</a>
+    </div>
+
+    <h2>Processador de Saldo de Peças - Assist</h2>
+    
+    <div class="info-header">
+        <strong>Instruções:</strong>
+        <ol>
+            <li>Cole o seu texto copiado na caixa abaixo.</li>
+            <li>Clique no botão <strong>Processar Dados</strong> para visualizar.</li>
+            <li>Exporte diretamente para <strong>Excel (CSV)</strong> ou <strong>PDF</strong>.</li>
+            <li><em>Dica: Clique nos cabeçalhos da tabela para ordenar por Código, Nome ou Quantidade.</em></li>
+        </ol>
+    </div>
+
+    <textarea id="inputText" placeholder="Cole o texto da listagem aqui..."></textarea>
+    
+    <div class="button-group">
+        <button onclick="processarTexto()">Processar Dados</button>
+        <button id="btnExcel" class="btn-success" onclick="exportarExcel()" style="display: none;">Exportar para Excel (CSV)</button>
+        <button id="btnPdf" class="btn-secondary" onclick="exportarPdf()" style="display: none;">Exportar para PDF</button>
+    </div>
+
+    <div id="divTecnicoContainer">
+        <div class="tecnico-titulo">Técnico: <span id="spanNomeTecnico"></span></div>
+    </div>
+
+    <table id="tabelaPecas" style="display: none;">
+        <thead>
+            <tr>
+                <th style="width: 25%;" class="sortable" onclick="ordenarTabela('codigo')">Código da Peça</th>
+                <th class="sortable" onclick="ordenarTabela('nome')">Nome da Peça</th>
+                <th style="width: 15%;" class="sortable" onclick="ordenarTabela('quantidade')">Qtd</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaResultado">
+            </tbody>
+    </table>
+</div>
+
+<script>
+let dadosProcessados = [];
+let nomeTecnico = "";
+
+// Variáveis de controle de ordenação
+let colunaAtual = '';
+let ordemAtual = 'asc'; // 'asc' ou 'desc'
+
+function processarTexto() {
+    let texto = document.getElementById('inputText').value.trim();
+    if (!texto) {
+        alert("Cole o conteúdo no campo de texto primeiro!");
+        return;
+    }
+
+    // Coleta o nome do técnico dinamicamente logo após a palavra "Técnico:"
+    let matchTecnico = texto.match(/Técnico:\s*([^\n\r]+)/i);
+    nomeTecnico = (matchTecnico && matchTecnico[1]) ? matchTecnico[1].trim() : "Técnico";
+
+    // LIMAÇÃO CRÍTICA: Remove todo o cabeçalho do portal e do formulário de pesquisa
+    // Remove desde "Filtrar por" até "Qtd" para garantir que o lixo da tela não seja lido
+    texto = texto.replace(/Filtrar[\s\S]*?Listagem[\s\S]*?Qtd/gi, "");
+    // Limpeza extra para garantir que palavras isoladas de formulário sumam
+    texto = texto.replace(/Código:\s*Descrição:\s*Nota Fiscal:\s*Remessa:\s*/gi, "");
+
+    let blocos = texto.split(nomeTecnico);
+    let pecasAgrupadas = {};
+
+    blocos.forEach(bloco => {
+        bloco = bloco.trim();
+        if (!bloco) return;
+
+        let linhasBloco = bloco.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (linhasBloco.length < 3) return;
+
+        let linha2 = linhasBloco[1];
+        let linha3 = linhasBloco[2];
+
+        // Extração da quantidade do final da linha 3
+        let qtdMatch = linha3.match(/(\d+)$/);
+        let qtd = qtdMatch ? parseInt(qtdMatch[1], 10) : 1;
+
+        // Extração do código e nome da peça (linha 2)
+        let codigoPecaMatch = linha2.match(/0+(\d{8,10})$/);
+        let codigoPeca = "";
+        let nomePeca = "";
+
+        if (codigoPecaMatch) {
+            codigoPeca = String(Number(codigoPecaMatch[1])); // Remove zeros à esquerda
+            nomePeca = linha2.substring(0, linha2.length - codigoPecaMatch[0].length).trim();
+        } else {
+            let partesLinha2 = linha2.split(/(0{6,}\d+)/);
+            nomePeca = partesLinha2[0] ? partesLinha2[0].trim() : linha2;
+            codigoPeca = partesLinha2[1] ? String(Number(partesLinha2[1].match(/\d+$/)[0])) : "Desconhecido";
+        }
+
+        // Impede que textos perdidos virem peças com código "0" ou "Desconhecido"
+        if (codigoPeca !== "0" && codigoPeca !== "Desconhecido" && codigoPeca !== "") {
+            let chaveUnica = codigoPeca;
+            if (pecasAgrupadas[chaveUnica]) {
+                pecasAgrupadas[chaveUnica].quantidade += qtd;
+            } else {
+                pecasAgrupadas[chaveUnica] = {
+                    codigo: codigoPeca,
+                    nome: nomePeca,
+                    quantidade: qtd
+                };
+            }
+        }
+    });
+
+    dadosProcessados = Object.values(pecasAgrupadas);
+
+    // Reseta a ordenação ao processar um texto novo e renderiza a tabela
+    colunaAtual = '';
+    renderizarTabela();
+
+    // Exibe o nome do técnico e botões de exportação
+    document.getElementById('spanNomeTecnico').innerText = nomeTecnico;
+    document.querySelector('.tecnico-titulo').style.display = 'block';
+    document.getElementById('tabelaPecas').style.display = 'table';
+    document.getElementById('btnExcel').style.display = 'inline-block';
+    document.getElementById('btnPdf').style.display = 'inline-block';
+}
+
+function renderizarTabela() {
+    const tbody = document.getElementById('tabelaResultado');
+    tbody.innerHTML = '';
+
+    if (dadosProcessados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #777;">Nenhum dado processado. Verifique o formato do texto colado.</td></tr>';
+        return;
+    }
+
+    // Aplica ordenação se houver coluna selecionada
+    if (colunaAtual) {
+        dadosProcessados.sort((a, b) => {
+            let valA = a[colunaAtual];
+            let valB = b[colunaAtual];
+
+            // Se for quantidade ou código (como número), converte para comparação numérica correta
+            if (colunaAtual === 'quantidade' || colunaAtual === 'codigo') {
+                valA = Number(valA);
+                valB = Number(valB);
+            } else {
+                // Para nomes, transforma em maiúsculas para ordenar sem diferenciar maiúsculas/minúsculas
+                valA = String(valA).toUpperCase();
+                valB = String(valB).toUpperCase();
+            }
+
+            if (valA < valB) return ordemAtual === 'asc' ? -1 : 1;
+            if (valA > valB) return ordemAtual === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    dadosProcessados.forEach(item => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${item.codigo}</td>
+            <td>${item.nome}</td>
+            <td>${item.quantidade}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function ordenarTabela(coluna) {
+    if (dadosProcessados.length === 0) return;
+
+    // Se clicou na mesma coluna, inverte a ordem. Se mudou de coluna, define como ascendente por padrão.
+    if (coluna === colunaAtual) {
+        ordemAtual = ordemAtual === 'asc' ? 'desc' : 'asc';
+    } else {
+        colunaAtual = coluna;
+        ordemAtual = 'asc';
+    }
+
+    // Atualiza visualmente as classes CSS das setas nos cabeçalhos
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('asc', 'desc');
+    });
+
+    // Usa o window.event para compatibilidade
+    let thClicado = window.event.target;
+    thClicado.classList.add(ordemAtual);
+
+    // Re-renderiza a tabela ordenada
+    renderizarTabela();
+}
+
+function exportarExcel() {
+    if (dadosProcessados.length === 0) return;
+
+    // Geração da data no formato dia mes ano (ex: 22_Junho_2026)
+    let hoje = new Date();
+    let dia = String(hoje.getDate()).padStart(2, '0');
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    let mesNome = meses[hoje.getMonth()];
+    let ano = hoje.getFullYear();
+    
+    let dataStr = `${dia}_${mesNome}_${ano}`;
+    let nomeLimpoTecnico = nomeTecnico.replace(/\s+/g, '_');
+
+    // Cabeçalho CSV com separador de ponto e vírgula e formato apropriado para Pt-Br
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // Adiciona BOM para acentuação correta no Excel
+    csvContent += "Código da Peça;Nome da Peça;Qtd\r\n";
+
+    dadosProcessados.forEach(item => {
+        // Envolve nome da peça em aspas caso contenha ponto e vírgula ou vírgula
+        let nomeLimpo = `"${item.nome.replace(/"/g, '""')}"`;
+        // Força o Excel a tratar o código como texto adicionando o '=' antes e aspas
+        let linha = `="${item.codigo}";${nomeLimpo};${item.quantidade}\r\n`;
+        csvContent += linha;
+    });
+
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    
+    // Formato solicitado: SaldoPecas_[Nome técnico]_dia_mes_ano
+    link.setAttribute("download", `SaldoPecas_${nomeLimpoTecnico}_${dataStr}.csv`);
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportarPdf() {
+    window.print();
+}
+</script>
+
+</body>
+</html>
