@@ -400,7 +400,7 @@ href="javascript:document.querySelector('select[name=&quot;lacre&quot;]').value=
         let osId = "";
         
         // Separação baseada na regra do início "700"
-        if (chamadoRaw.startsWith("700") && chamadoRaw.length === 11) {
+        if ((chamadoRaw.startsWith("700") || chamadoRaw.startsWith("500") || chamadoRaw.startsWith("800")) && chamadoRaw.length === 11) {
             osId = chamadoRaw.substring(3); // Corta os 3 primeiros caracteres (700) e pega o restante
         } else if (chamadoRaw.length === 8) {
             osId = chamadoRaw; // Se digitado apenas os 8 números finais, usa direto
