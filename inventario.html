@@ -187,12 +187,10 @@
             background-color: #f8f9fa;
         }
         
-        /* Classes dinâmicas para ocultar ou exibir colunas de contagem */
         .modo-conferencia-oculto .col-conferencia {
             display: none !important;
         }
 
-        /* Estilos de Conferência (Cores e Botões) */
         .check-peca {
             transform: scale(1.4);
             cursor: pointer;
@@ -259,7 +257,7 @@
         <ol>
             <li>Cole o seu texto copiado na caixa abaixo.</li>
             <li>Clique no botão <strong>Processar Dados</strong> para visualizar.</li>
-            <li>Utilize o botão <strong>Contagem de Peças</strong> no topo para exibir/ocultar os checks de conferência e sobras/faltas.</li>
+            <li>Utilize o botão <strong>Contagem de Peças</strong> no topo para conferir a contagem real e faltas.</li>
         </ol>
     </div>
 
@@ -282,8 +280,8 @@
                 <th style="width: 5%; text-align: center;" class="col-conferencia">✔</th>
                 <th style="width: 25%;" class="sortable" onclick="ordenarTabela('codigo')">Código da Peça</th>
                 <th class="sortable" onclick="ordenarTabela('nome')">Nome da Peça</th>
-                <th style="width: 10%; text-align: center;" class="sortable" onclick="ordenarTabela('quantidade')">Qtd</th>
-                <th style="width: 20%; text-align: center;" class="col-conferencia">Sobra/Falta</th>
+                <th style="width: 10%; text-align: center;" class="sortable" onclick="ordenarTabela('quantidade')">Qtd Sist.</th>
+                <th style="width: 25%; text-align: center;" class="sortable col-conferencia" onclick="ordenarTabela('contagem')">Contagem Física / Status</th>
             </tr>
         </thead>
         <tbody id="tabelaResultado">
@@ -293,7 +291,7 @@
             <tr>
                 <td colspan="2" id="footerLabelTotal" style="text-align: right;">Totais Gerais:</td>
                 <td id="totalGeralQtd" style="text-align: center;">0</td>
-                <td colspan="2" id="totalGeralDiferenca" style="text-align: center;" class="col-conferencia">0</td>
+                <td colspan="2" id="totalGeralStatus" style="text-align: center;" class="col-conferencia">Estoque Conferido</td>
             </tr>
         </tfoot>
     </table>
@@ -377,7 +375,7 @@ function processarTexto() {
                     nome: nomePeca,
                     quantidade: qtd,
                     checked: false,
-                    diferenca: 0
+                    contagem: 0
                 };
             }
         }
@@ -402,7 +400,7 @@ function renderizarTabela() {
     if (dadosProcessados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">Nenhum dado processado. Verifique o texto.</td></tr>';
         document.getElementById('totalGeralQtd').innerText = '0';
-        document.getElementById('totalGeralDiferenca').innerText = '0';
+        document.getElementById('totalGeralStatus').innerText = 'Estoque OK';
         return;
     }
 
@@ -411,7 +409,7 @@ function renderizarTabela() {
             let valA = a[colunaAtual];
             let valB = b[colunaAtual];
 
-            if (colunaAtual === 'quantidade' || colunaAtual === 'codigo' || colunaAtual === 'diferenca') {
+            if (colunaAtual === 'quantidade' || colunaAtual === 'codigo' || colunaAtual === 'contagem') {
                 valA = Number(valA);
                 valB = Number(valB);
             } else {
@@ -426,22 +424,35 @@ function renderizarTabela() {
     }
 
     let somaTotalPecas = 0;
-    let somaTotalDiferenca = 0;
+    let somaTotalContagem = 0;
 
     dadosProcessados.forEach(item => {
         somaTotalPecas += item.quantidade;
-        somaTotalDiferenca += item.diferenca;
+        somaTotalContagem += item.contagem;
         
         let tr = document.createElement('tr');
         
-        if (item.diferenca !== 0) {
-            tr.classList.add('linha-alerta');
-        } else if (item.checked) {
+        let diferenca = item.quantidade - item.contagem;
+
+        if (item.checked) {
             tr.classList.add('linha-ok');
+        } else if (diferenca > 0) {
+            tr.classList.add('linha-alerta');
         }
 
-        let corDiferenca = item.diferenca > 0 ? '#155724' : (item.diferenca < 0 ? '#721c24' : '#495057');
-        let sinalDiferenca = item.diferenca > 0 ? '+' : '';
+        let statusTexto = "";
+        let corStatus = "#495057";
+
+        if (diferenca > 0) {
+            statusTexto = `Falta(m) ${diferenca}`;
+            corStatus = "#721c24";
+        } else if (diferenca < 0) {
+            statusTexto = `Sobra(m) ${Math.abs(diferenca)}`;
+            corStatus = "#155724";
+        } else {
+            statusTexto = "OK (Completo)";
+            corStatus = "#155724";
+        }
 
         tr.innerHTML = `
             <td style="text-align: center;" class="col-conferencia">
@@ -451,21 +462,37 @@ function renderizarTabela() {
             <td>${item.nome}</td>
             <td style="text-align: center; font-weight: bold;">${item.quantidade}</td>
             <td style="text-align: center; white-space: nowrap;" class="col-conferencia">
-                <button class="btn-ajuste minus" onclick="alterarDiferenca('${item.codigo}', -1)">-</button>
-                <span style="display: inline-block; width: 40px; font-weight: bold; color: ${corDiferenca}; font-size: 15px;">
-                    ${sinalDiferenca}${item.diferenca}
+                <button class="btn-ajuste minus" onclick="alterarContagem('${item.codigo}', -1)">-</button>
+                <span style="display: inline-block; width: 30px; font-weight: bold; font-size: 15px;">
+                    ${item.contagem}
                 </span>
-                <button class="btn-ajuste plus" onclick="alterarDiferenca('${item.codigo}', 1)">+</button>
+                <button class="btn-ajuste plus" onclick="alterarContagem('${item.codigo}', 1)">+</button>
+                <span style="display: inline-block; margin-left: 8px; font-size: 13px; font-weight: bold; color: ${corStatus};">
+                    (${statusTexto})
+                </span>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
     document.getElementById('totalGeralQtd').innerText = somaTotalPecas;
+    let diferencaTotalGeral = somaTotalPecas - somaTotalContagem;
     
-    let corDifTotal = somaTotalDiferenca > 0 ? '#155724' : (somaTotalDiferenca < 0 ? '#721c24' : '#0F4C81');
-    let sinalDifTotal = somaTotalDiferenca > 0 ? '+' : '';
-    document.getElementById('totalGeralDiferenca').innerHTML = `<span style="color: ${corDifTotal}">${sinalDifTotal}${somaTotalDiferenca}</span>`;
+    let textoTotalGeralStatus = "";
+    let corTotalGeral = "#0F4C81";
+
+    if (diferencaTotalGeral > 0) {
+        textoTotalGeralStatus = `Faltam ${diferencaTotalGeral} peças no total`;
+        corTotalGeral = "#721c24";
+    } else if (diferencaTotalGeral < 0) {
+        textoTotalGeralStatus = `Sobram ${Math.abs(diferencaTotalGeral)} peças no total`;
+        corTotalGeral = "#155724";
+    } else {
+        textoTotalGeralStatus = "Contagem Geral Bateu!";
+        corTotalGeral = "#155724";
+    }
+
+    document.getElementById('totalGeralStatus').innerHTML = `<span style="color: ${corTotalGeral}">${textoTotalGeralStatus}</span>`;
 }
 
 function toggleCheck(checkbox, codigo) {
@@ -473,10 +500,12 @@ function toggleCheck(checkbox, codigo) {
     if(item) {
         item.checked = checkbox.checked;
         let tr = checkbox.closest('tr');
-        if (item.checked && item.diferenca === 0) {
+        let diferenca = item.quantidade - item.contagem;
+
+        if (item.checked) {
             tr.classList.add('linha-ok');
             tr.classList.remove('linha-alerta');
-        } else if (item.diferenca !== 0) {
+        } else if (diferenca > 0) {
             tr.classList.add('linha-alerta');
             tr.classList.remove('linha-ok');
         } else {
@@ -485,10 +514,11 @@ function toggleCheck(checkbox, codigo) {
     }
 }
 
-function alterarDiferenca(codigo, valor) {
+function alterarContagem(codigo, valor) {
     let item = dadosProcessados.find(i => i.codigo === codigo);
     if(item) {
-        item.diferenca += valor;
+        item.contagem += valor;
+        if (item.contagem < 0) item.contagem = 0;
         renderizarTabela();
     }
 }
@@ -522,31 +552,35 @@ function exportarExcel() {
     let nomeLimpoTecnico = nomeTecnico.replace(/\s+/g, '_');
 
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-    csvContent += "Conferido;Código da Peça;Nome da Peça;Qtd Sistema;Sobra/Falta;Qtd Real Encontrada\r\n";
+    csvContent += "Conferido;Código da Peça;Nome da Peça;Qtd Sistema;Qtd Contada Física;Situação\r\n";
 
     let somaTotalPecas = 0;
-    let somaTotalDiferenca = 0;
-    let somaQtdReal = 0;
+    let somaTotalContagem = 0;
 
     dadosProcessados.forEach(item => {
         somaTotalPecas += item.quantidade;
-        somaTotalDiferenca += item.diferenca;
-        let qtdReal = item.quantidade + item.diferenca;
-        somaQtdReal += qtdReal;
+        somaTotalContagem += item.contagem;
+        let diferenca = item.quantidade - item.contagem;
+        
+        let situacao = "OK";
+        if (diferenca > 0) situacao = `Falta(m) ${diferenca}`;
+        else if (diferenca < 0) situacao = `Sobra(m) ${Math.abs(diferenca)}`;
 
-        let status = item.checked ? "SIM" : "NÃO";
+        let statusCheck = item.checked ? "SIM" : "NÃO";
         let nomeLimpo = `"${item.nome.replace(/"/g, '""')}"`;
         
-        let linha = `"${status}";="${item.codigo}";${nomeLimpo};${item.quantidade};${item.diferenca};${qtdReal}\r\n`;
+        let linha = `"${statusCheck}";="${item.codigo}";${nomeLimpo};${item.quantidade};${item.contagem};"${situacao}"\r\n`;
         csvContent += linha;
     });
 
-    csvContent += `;"TOTAIS GERAIS:";;${somaTotalPecas};${somaTotalDiferenca};${somaQtdReal}\r\n`;
+    let difGeral = somaTotalPecas - somaTotalContagem;
+    let sitGeral = difGeral === 0 ? "Bateu" : (difGeral > 0 ? `Faltam ${difGeral}` : `Sobram ${Math.abs(difGeral)}`);
+    csvContent += `;"TOTAIS GERAIS:";;${somaTotalPecas};${somaTotalContagem};"${sitGeral}"\r\n`;
 
     var encodedUri = encodeURI(csvContent);
     var link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Inventario_Pecas_${nomeLimpoTecnico}_${dataStr}.csv`);
+    link.setAttribute("download", `Contagem_Pecas_${nomeLimpoTecnico}_${dataStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
