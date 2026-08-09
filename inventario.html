@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Processador de Saldo de Peças</title>
     <style>
@@ -20,7 +19,7 @@
             color: #333;
         }
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 20px auto;
             background: #fff;
             padding: 30px;
@@ -29,6 +28,9 @@
         }
         .top-nav {
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .btn-voltar {
             background-color: #6c757d;
@@ -45,6 +47,20 @@
         }
         .btn-voltar:hover {
             background-color: #5a6268;
+        }
+        .btn-toggle-conferencia {
+            background-color: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-toggle-conferencia:hover {
+            background-color: #138496;
         }
         h2 {
             margin-top: 0;
@@ -127,6 +143,8 @@
             border-radius: 0 4px 4px 0;
             display: none;
         }
+        
+        /* Estilos da Tabela */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -137,13 +155,13 @@
             border: 1px solid #dee2e6;
             padding: 10px 12px;
             text-align: left;
+            vertical-align: middle;
         }
         th {
             background-color: #f1f3f5;
             color: #495057;
             font-weight: bold;
         }
-        /* Estilo para colunas ordenáveis */
         th.sortable {
             cursor: pointer;
             user-select: none;
@@ -169,50 +187,69 @@
             background-color: #f8f9fa;
         }
         
+        /* Classes dinâmicas para ocultar ou exibir colunas de contagem */
+        .modo-conferencia-oculto .col-conferencia {
+            display: none !important;
+        }
+
+        /* Estilos de Conferência (Cores e Botões) */
+        .check-peca {
+            transform: scale(1.4);
+            cursor: pointer;
+            accent-color: #0F4C81;
+        }
+        .btn-ajuste {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            color: #495057;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.15s;
+        }
+        .btn-ajuste:hover { background-color: #dee2e6; }
+        .btn-ajuste.minus:hover { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .btn-ajuste.plus:hover { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .btn-ajuste:active { transform: scale(0.90); }
+        
+        .linha-ok { background-color: #e8f5e9 !important; }
+        .linha-alerta { background-color: #fff3cd !important; }
+
+        tfoot td {
+            background-color: #eef1f6;
+            font-weight: bold;
+            color: #0F4C81;
+            border-top: 2px solid #0F4C81;
+        }
+        
         @media print {
-            body {
-                background-color: #fff;
-            }
-            .container {
-                box-shadow: none;
-                padding: 0;
-                margin: 0;
-                max-width: 100%;
-            }
-            textarea, .info-header, .button-group, h2, .top-nav {
-                display: none !important;
-            }
-            .tecnico-titulo {
-                display: block;
-                background-color: transparent;
-                border-left: none;
-                padding: 0 0 10px 0;
-                margin-top: 0;
-                border-bottom: 1px solid #ccc;
-            }
-            table {
-                page-break-inside: auto;
-            }
-            tr {
-                page-break-inside: avoid;
-                page-break-after: auto;
-            }
-            th {
-                background-color: #f1f3f5 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            th.sortable::after {
-                content: ''; /* Remove setas na impressão */
-            }
+            body { background-color: #fff; }
+            .container { box-shadow: none; padding: 0; margin: 0; max-width: 100%; }
+            textarea, .info-header, .button-group, h2, .top-nav, .btn-ajuste { display: none !important; }
+            .tecnico-titulo { display: block; background-color: transparent; border-left: none; padding: 0 0 10px 0; margin-top: 0; border-bottom: 1px solid #ccc; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            th { background-color: #f1f3f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tfoot td { background-color: #eef1f6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            th.sortable::after { content: ''; }
+            .linha-ok { background-color: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .linha-alerta { background-color: #fff3cd !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .modo-conferencia-oculto .col-conferencia { display: none !important; }
         }
     </style>
 </head>
-<body>
+<body class="modo-conferencia-oculto">
 
 <div class="container">
     <div class="top-nav">
-        <a href="index.html" class="btn-voltar">← Voltar para Início</a>
+        <a href="https://viniciusdacio.github.io/assist/index.html" class="btn-voltar">← Voltar para Início</a>
     </div>
 
     <h2>Processador de Saldo de Peças - Assist</h2>
@@ -220,12 +257,9 @@
     <div class="info-header">
         <strong>Instruções:</strong>
         <ol>
-            <li>Copia a Página do saldo de peças e cole aqui</li>
-            <li><em>Dica: Ctrl + A e Ctrl + C</em></li>
             <li>Cole o seu texto copiado na caixa abaixo.</li>
             <li>Clique no botão <strong>Processar Dados</strong> para visualizar.</li>
-            <li>Exporte diretamente para <strong>Excel (CSV)</strong> ou <strong>PDF</strong>.</li>
-            <li><em>Dica: Clique nos cabeçalhos da tabela para ordenar por Código, Nome ou Quantidade.</em></li>
+            <li>Utilize o botão <strong>Contagem de Peças</strong> no topo para exibir/ocultar os checks de conferência e sobras/faltas.</li>
         </ol>
     </div>
 
@@ -235,6 +269,7 @@
         <button onclick="processarTexto()">Processar Dados</button>
         <button id="btnExcel" class="btn-success" onclick="exportarExcel()" style="display: none;">Exportar para Excel (CSV)</button>
         <button id="btnPdf" class="btn-secondary" onclick="exportarPdf()" style="display: none;">Exportar para PDF</button>
+        <button id="btnToggleConf" class="btn-toggle-conferencia" onclick="alternarModoConferencia()" style="display: none;">Contagem de Peças: Oculto</button>
     </div>
 
     <div id="divTecnicoContainer">
@@ -244,23 +279,51 @@
     <table id="tabelaPecas" style="display: none;">
         <thead>
             <tr>
+                <th style="width: 5%; text-align: center;" class="col-conferencia">✔</th>
                 <th style="width: 25%;" class="sortable" onclick="ordenarTabela('codigo')">Código da Peça</th>
                 <th class="sortable" onclick="ordenarTabela('nome')">Nome da Peça</th>
-                <th style="width: 15%;" class="sortable" onclick="ordenarTabela('quantidade')">Qtd</th>
+                <th style="width: 10%; text-align: center;" class="sortable" onclick="ordenarTabela('quantidade')">Qtd</th>
+                <th style="width: 20%; text-align: center;" class="col-conferencia">Sobra/Falta</th>
             </tr>
         </thead>
         <tbody id="tabelaResultado">
-            </tbody>
+            <!-- Dados inseridos dinamicamente -->
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" id="footerLabelTotal" style="text-align: right;">Totais Gerais:</td>
+                <td id="totalGeralQtd" style="text-align: center;">0</td>
+                <td colspan="2" id="totalGeralDiferenca" style="text-align: center;" class="col-conferencia">0</td>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
 <script>
 let dadosProcessados = [];
 let nomeTecnico = "";
-
-// Variáveis de controle de ordenação
 let colunaAtual = '';
-let ordemAtual = 'asc'; // 'asc' ou 'desc'
+let ordemAtual = 'asc';
+let modoConferenciaAtivo = false;
+
+function alternarModoConferencia() {
+    modoConferenciaAtivo = !modoConferenciaAtivo;
+    let bodyTag = document.body;
+    let btnToggle = document.getElementById('btnToggleConf');
+    let footerLabel = document.getElementById('footerLabelTotal');
+
+    if (modoConferenciaAtivo) {
+        bodyTag.classList.remove('modo-conferencia-oculto');
+        btnToggle.innerText = "Contagem de Peças: Visível";
+        btnToggle.style.backgroundColor = "#28a745";
+        footerLabel.setAttribute('colspan', '3');
+    } else {
+        bodyTag.classList.add('modo-conferencia-oculto');
+        btnToggle.innerText = "Contagem de Peças: Oculto";
+        btnToggle.style.backgroundColor = "#17a2b8";
+        footerLabel.setAttribute('colspan', '2');
+    }
+}
 
 function processarTexto() {
     let texto = document.getElementById('inputText').value.trim();
@@ -269,14 +332,10 @@ function processarTexto() {
         return;
     }
 
-    // Coleta o nome do técnico dinamicamente logo após a palavra "Técnico:"
     let matchTecnico = texto.match(/Técnico:\s*([^\n\r]+)/i);
     nomeTecnico = (matchTecnico && matchTecnico[1]) ? matchTecnico[1].trim() : "Técnico";
 
-    // LIMAÇÃO CRÍTICA: Remove todo o cabeçalho do portal e do formulário de pesquisa
-    // Remove desde "Filtrar por" até "Qtd" para garantir que o lixo da tela não seja lido
     texto = texto.replace(/Filtrar[\s\S]*?Listagem[\s\S]*?Qtd/gi, "");
-    // Limpeza extra para garantir que palavras isoladas de formulário sumam
     texto = texto.replace(/Código:\s*Descrição:\s*Nota Fiscal:\s*Remessa:\s*/gi, "");
 
     let blocos = texto.split(nomeTecnico);
@@ -292,17 +351,15 @@ function processarTexto() {
         let linha2 = linhasBloco[1];
         let linha3 = linhasBloco[2];
 
-        // Extração da quantidade do final da linha 3
         let qtdMatch = linha3.match(/(\d+)$/);
         let qtd = qtdMatch ? parseInt(qtdMatch[1], 10) : 1;
 
-        // Extração do código e nome da peça (linha 2)
         let codigoPecaMatch = linha2.match(/0+(\d{8,10})$/);
         let codigoPeca = "";
         let nomePeca = "";
 
         if (codigoPecaMatch) {
-            codigoPeca = String(Number(codigoPecaMatch[1])); // Remove zeros à esquerda
+            codigoPeca = String(Number(codigoPecaMatch[1]));
             nomePeca = linha2.substring(0, linha2.length - codigoPecaMatch[0].length).trim();
         } else {
             let partesLinha2 = linha2.split(/(0{6,}\d+)/);
@@ -310,7 +367,6 @@ function processarTexto() {
             codigoPeca = partesLinha2[1] ? String(Number(partesLinha2[1].match(/\d+$/)[0])) : "Desconhecido";
         }
 
-        // Impede que textos perdidos virem peças com código "0" ou "Desconhecido"
         if (codigoPeca !== "0" && codigoPeca !== "Desconhecido" && codigoPeca !== "") {
             let chaveUnica = codigoPeca;
             if (pecasAgrupadas[chaveUnica]) {
@@ -319,24 +375,24 @@ function processarTexto() {
                 pecasAgrupadas[chaveUnica] = {
                     codigo: codigoPeca,
                     nome: nomePeca,
-                    quantidade: qtd
+                    quantidade: qtd,
+                    checked: false,
+                    diferenca: 0
                 };
             }
         }
     });
 
     dadosProcessados = Object.values(pecasAgrupadas);
-
-    // Reseta a ordenação ao processar um texto novo e renderiza a tabela
     colunaAtual = '';
     renderizarTabela();
 
-    // Exibe o nome do técnico e botões de exportação
     document.getElementById('spanNomeTecnico').innerText = nomeTecnico;
     document.querySelector('.tecnico-titulo').style.display = 'block';
     document.getElementById('tabelaPecas').style.display = 'table';
     document.getElementById('btnExcel').style.display = 'inline-block';
     document.getElementById('btnPdf').style.display = 'inline-block';
+    document.getElementById('btnToggleConf').style.display = 'inline-block';
 }
 
 function renderizarTabela() {
@@ -344,22 +400,21 @@ function renderizarTabela() {
     tbody.innerHTML = '';
 
     if (dadosProcessados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #777;">Nenhum dado processado. Verifique o formato do texto colado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">Nenhum dado processado. Verifique o texto.</td></tr>';
+        document.getElementById('totalGeralQtd').innerText = '0';
+        document.getElementById('totalGeralDiferenca').innerText = '0';
         return;
     }
 
-    // Aplica ordenação se houver coluna selecionada
     if (colunaAtual) {
         dadosProcessados.sort((a, b) => {
             let valA = a[colunaAtual];
             let valB = b[colunaAtual];
 
-            // Se for quantidade ou código (como número), converte para comparação numérica correta
-            if (colunaAtual === 'quantidade' || colunaAtual === 'codigo') {
+            if (colunaAtual === 'quantidade' || colunaAtual === 'codigo' || colunaAtual === 'diferenca') {
                 valA = Number(valA);
                 valB = Number(valB);
             } else {
-                // Para nomes, transforma em maiúsculas para ordenar sem diferenciar maiúsculas/minúsculas
                 valA = String(valA).toUpperCase();
                 valB = String(valB).toUpperCase();
             }
@@ -370,45 +425,93 @@ function renderizarTabela() {
         });
     }
 
+    let somaTotalPecas = 0;
+    let somaTotalDiferenca = 0;
+
     dadosProcessados.forEach(item => {
+        somaTotalPecas += item.quantidade;
+        somaTotalDiferenca += item.diferenca;
+        
         let tr = document.createElement('tr');
+        
+        if (item.diferenca !== 0) {
+            tr.classList.add('linha-alerta');
+        } else if (item.checked) {
+            tr.classList.add('linha-ok');
+        }
+
+        let corDiferenca = item.diferenca > 0 ? '#155724' : (item.diferenca < 0 ? '#721c24' : '#495057');
+        let sinalDiferenca = item.diferenca > 0 ? '+' : '';
+
         tr.innerHTML = `
+            <td style="text-align: center;" class="col-conferencia">
+                <input type="checkbox" class="check-peca" onchange="toggleCheck(this, '${item.codigo}')" ${item.checked ? 'checked' : ''}>
+            </td>
             <td>${item.codigo}</td>
             <td>${item.nome}</td>
-            <td>${item.quantidade}</td>
+            <td style="text-align: center; font-weight: bold;">${item.quantidade}</td>
+            <td style="text-align: center; white-space: nowrap;" class="col-conferencia">
+                <button class="btn-ajuste minus" onclick="alterarDiferenca('${item.codigo}', -1)">-</button>
+                <span style="display: inline-block; width: 40px; font-weight: bold; color: ${corDiferenca}; font-size: 15px;">
+                    ${sinalDiferenca}${item.diferenca}
+                </span>
+                <button class="btn-ajuste plus" onclick="alterarDiferenca('${item.codigo}', 1)">+</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+
+    document.getElementById('totalGeralQtd').innerText = somaTotalPecas;
+    
+    let corDifTotal = somaTotalDiferenca > 0 ? '#155724' : (somaTotalDiferenca < 0 ? '#721c24' : '#0F4C81');
+    let sinalDifTotal = somaTotalDiferenca > 0 ? '+' : '';
+    document.getElementById('totalGeralDiferenca').innerHTML = `<span style="color: ${corDifTotal}">${sinalDifTotal}${somaTotalDiferenca}</span>`;
+}
+
+function toggleCheck(checkbox, codigo) {
+    let item = dadosProcessados.find(i => i.codigo === codigo);
+    if(item) {
+        item.checked = checkbox.checked;
+        let tr = checkbox.closest('tr');
+        if (item.checked && item.diferenca === 0) {
+            tr.classList.add('linha-ok');
+            tr.classList.remove('linha-alerta');
+        } else if (item.diferenca !== 0) {
+            tr.classList.add('linha-alerta');
+            tr.classList.remove('linha-ok');
+        } else {
+            tr.classList.remove('linha-ok', 'linha-alerta');
+        }
+    }
+}
+
+function alterarDiferenca(codigo, valor) {
+    let item = dadosProcessados.find(i => i.codigo === codigo);
+    if(item) {
+        item.diferenca += valor;
+        renderizarTabela();
+    }
 }
 
 function ordenarTabela(coluna) {
     if (dadosProcessados.length === 0) return;
-
-    // Se clicou na mesma coluna, inverte a ordem. Se mudou de coluna, define como ascendente por padrão.
     if (coluna === colunaAtual) {
         ordemAtual = ordemAtual === 'asc' ? 'desc' : 'asc';
     } else {
         colunaAtual = coluna;
         ordemAtual = 'asc';
     }
-
-    // Atualiza visualmente as classes CSS das setas nos cabeçalhos
     document.querySelectorAll('th.sortable').forEach(th => {
         th.classList.remove('asc', 'desc');
     });
-
-    // Usa o window.event para compatibilidade
     let thClicado = window.event.target;
     thClicado.classList.add(ordemAtual);
-
-    // Re-renderiza a tabela ordenada
     renderizarTabela();
 }
 
 function exportarExcel() {
     if (dadosProcessados.length === 0) return;
 
-    // Geração da data no formato dia mes ano (ex: 22_Junho_2026)
     let hoje = new Date();
     let dia = String(hoje.getDate()).padStart(2, '0');
     const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -418,25 +521,32 @@ function exportarExcel() {
     let dataStr = `${dia}_${mesNome}_${ano}`;
     let nomeLimpoTecnico = nomeTecnico.replace(/\s+/g, '_');
 
-    // Cabeçalho CSV com separador de ponto e vírgula e formato apropriado para Pt-Br
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // Adiciona BOM para acentuação correta no Excel
-    csvContent += "Código da Peça;Nome da Peça;Qtd\r\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+    csvContent += "Conferido;Código da Peça;Nome da Peça;Qtd Sistema;Sobra/Falta;Qtd Real Encontrada\r\n";
+
+    let somaTotalPecas = 0;
+    let somaTotalDiferenca = 0;
+    let somaQtdReal = 0;
 
     dadosProcessados.forEach(item => {
-        // Envolve nome da peça em aspas caso contenha ponto e vírgula ou vírgula
+        somaTotalPecas += item.quantidade;
+        somaTotalDiferenca += item.diferenca;
+        let qtdReal = item.quantidade + item.diferenca;
+        somaQtdReal += qtdReal;
+
+        let status = item.checked ? "SIM" : "NÃO";
         let nomeLimpo = `"${item.nome.replace(/"/g, '""')}"`;
-        // Força o Excel a tratar o código como texto adicionando o '=' antes e aspas
-        let linha = `="${item.codigo}";${nomeLimpo};${item.quantidade}\r\n`;
+        
+        let linha = `"${status}";="${item.codigo}";${nomeLimpo};${item.quantidade};${item.diferenca};${qtdReal}\r\n`;
         csvContent += linha;
     });
+
+    csvContent += `;"TOTAIS GERAIS:";;${somaTotalPecas};${somaTotalDiferenca};${somaQtdReal}\r\n`;
 
     var encodedUri = encodeURI(csvContent);
     var link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    
-    // Formato solicitado: SaldoPecas_[Nome técnico]_dia_mes_ano
-    link.setAttribute("download", `SaldoPecas_${nomeLimpoTecnico}_${dataStr}.csv`);
-    
+    link.setAttribute("download", `Inventario_Pecas_${nomeLimpoTecnico}_${dataStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -447,5 +557,4 @@ function exportarPdf() {
 }
 </script>
 
-</body>
-</html>
+</body></html>
